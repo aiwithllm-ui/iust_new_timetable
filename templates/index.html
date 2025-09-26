@@ -1,25 +1,60 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Timetable Generator</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script>
+        function confirmDelete(index) {
+            const confirmAction = confirm("Are you sure you want to delete this teacher?");
+            if (confirmAction) {
+                window.location.href = `/delete/${index}`;
+            }
+        }
+
+        function editTeacher(index, name, subject) {
+            document.getElementById("teacher").value = name;
+            document.getElementById("subject").value = subject;
+            document.getElementById("edit_index").value = index;
+            document.getElementById("submit_btn").innerText = "Update";
+        }
+    </script>
 </head>
 <body>
+
     <h1>Timetable Generator</h1>
-    
+
     <form method="POST">
-        <input type="text" name="teacher" placeholder="Teacher Name" required>
-        <input type="text" name="subject" placeholder="Subject" required>
-        <button type="submit">Add</button>
+        <input type="hidden" name="edit_index" id="edit_index" value="-1">
+        <input type="text" name="teacher" id="teacher" placeholder="Teacher Name" required>
+        <input type="text" name="subject" id="subject" placeholder="Subject" required>
+        <button type="submit" id="submit_btn">Add</button>
     </form>
 
     <h2>Teachers Added</h2>
     <ul>
         {% for teacher, subject in teachers_subjects %}
-            <li>{{ teacher }} - {{ subject }}</li>
+            <li>
+                {{ teacher }} - {{ subject }}
+                <span style="float:right;">
+                    <button type="button" style="background:#3b82f6; margin-right: 5px;"
+                        onclick="editTeacher({{ loop.index0 }}, '{{ teacher }}', '{{ subject }}')">
+                        ✎
+                    </button>
+                    <button type="button" style="background:#ef4444;"
+                        onclick="confirmDelete({{ loop.index0 }})">
+                        🗑
+                    </button>
+                </span>
+            </li>
         {% endfor %}
     </ul>
 
-    <a href="/generate"><button>Generate Timetable (PDF)</button></a>
+    {% if teachers_subjects %}
+        <form action="/generate">
+            <button type="submit">Generate Timetable (PDF)</button>
+        </form>
+    {% endif %}
+
 </body>
 </html>
