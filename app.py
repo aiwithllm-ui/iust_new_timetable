@@ -1,19 +1,18 @@
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request, send_file, session
 import random
 import io
+import os
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from reportlab.lib import colors
 
 app = Flask(__name__)
+app.secret_key = os.urandom(24)  # Required for using sessions
 
 # -------------------------
 # CONFIG
 # -------------------------
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
 PERIODS_PER_DAY = 4
-
-# Store teachers temporarily in memory
-teachers_subjects = []
 
 # -------------------------
 # TIMETABLE GENERATOR
@@ -23,14 +22,12 @@ def generate_timetable(teachers_subjects, days, periods):
     slots = [(day, p) for day in days for p in range(periods)]
     random.shuffle(slots)
 
-    # Repeat assignments so we can fill all slots
     assignments = teachers_subjects * (len(slots) // len(teachers_subjects) + 1)
     random.shuffle(assignments)
 
-    used = set()  # keep track of teacher per (day, period) to avoid double-booking
+    used = set()
 
     for (day, p), (teacher, subject) in zip(slots, assignments):
-        # Check if teacher already teaching in this period
         if (day, p, teacher) not in used:
             timetable[day][p] = (teacher, subject)
             used.add((day, p, teacher))
@@ -75,21 +72,34 @@ def create_pdf(timetable):
 # -------------------------
 @app.route("/", methods=["GET", "POST"])
 def index():
-    global teachers_subjects
+    if "teachers" not in session:
+        session["teachers"] = []
+
     if request.method == "POST":
         teacher = request.form.get("teacher")
         subject = request.form.get("subject")
         if teacher and subject:
-            teachers_subjects.append((teacher, subject))
-    return render_template("index.html", teachers_subjects=teachers_subjects)
+            session["teachers"].append((teacher, subject))
+            session.modified = True  # Mark session as modified
+
+    return render_template("index.html", teachers_subjects=session["teachers"])
+
 
 @app.route("/generate")
 def generate():
+    teachers_subjects = session.get("teachers", [])
     if not teachers_subjects:
         return "No teachers added!"
+
     timetable = generate_timetable(teachers_subjects, DAYS, PERIODS_PER_DAY)
     pdf_buffer = create_pdf(timetable)
+
+    # Clear teacher list after PDF generation
+    session.pop("teachers", None)
+
     return send_file(pdf_buffer, as_attachment=True, download_name="timetable.pdf", mimetype="application/pdf")
+
+
 # -------------------------
 # RUN
 # -------------------------
