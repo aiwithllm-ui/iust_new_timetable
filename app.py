@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file, session
+from flask import Flask, render_template, request, send_file, session, redirect, url_for
 import random
 import io
 import os
@@ -6,17 +6,11 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from reportlab.lib import colors
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)  # Required for using sessions
+app.secret_key = os.urandom(24)
 
-# -------------------------
-# CONFIG
-# -------------------------
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
 PERIODS_PER_DAY = 4
 
-# -------------------------
-# TIMETABLE GENERATOR
-# -------------------------
 def generate_timetable(teachers_subjects, days, periods):
     timetable = {day: [None] * periods for day in days}
     slots = [(day, p) for day in days for p in range(periods)]
@@ -24,7 +18,6 @@ def generate_timetable(teachers_subjects, days, periods):
 
     assignments = teachers_subjects * (len(slots) // len(teachers_subjects) + 1)
     random.shuffle(assignments)
-
     used = set()
 
     for (day, p), (teacher, subject) in zip(slots, assignments):
@@ -34,9 +27,6 @@ def generate_timetable(teachers_subjects, days, periods):
 
     return timetable
 
-# -------------------------
-# PDF EXPORT
-# -------------------------
 def create_pdf(timetable):
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer)
@@ -67,9 +57,6 @@ def create_pdf(timetable):
     buffer.seek(0)
     return buffer
 
-# -------------------------
-# ROUTES
-# -------------------------
 @app.route("/", methods=["GET", "POST"])
 def index():
     if "teachers" not in session:
@@ -78,12 +65,23 @@ def index():
     if request.method == "POST":
         teacher = request.form.get("teacher")
         subject = request.form.get("subject")
+        edit_index = int(request.form.get("edit_index", -1))
+
         if teacher and subject:
-            session["teachers"].append((teacher, subject))
-            session.modified = True  # Mark session as modified
+            if edit_index >= 0 and edit_index < len(session["teachers"]):
+                session["teachers"][edit_index] = (teacher, subject)
+            else:
+                session["teachers"].append((teacher, subject))
+            session.modified = True
 
     return render_template("index.html", teachers_subjects=session["teachers"])
 
+@app.route("/delete/<int:index>")
+def delete(index):
+    if "teachers" in session and 0 <= index < len(session["teachers"]):
+        session["teachers"].pop(index)
+        session.modified = True
+    return redirect(url_for("index"))
 
 @app.route("/generate")
 def generate():
@@ -93,15 +91,9 @@ def generate():
 
     timetable = generate_timetable(teachers_subjects, DAYS, PERIODS_PER_DAY)
     pdf_buffer = create_pdf(timetable)
-
-    # Clear teacher list after PDF generation
     session.pop("teachers", None)
 
     return send_file(pdf_buffer, as_attachment=True, download_name="timetable.pdf", mimetype="application/pdf")
 
-
-# -------------------------
-# RUN
-# -------------------------
 if __name__ == "__main__":
     app.run(debug=True)
