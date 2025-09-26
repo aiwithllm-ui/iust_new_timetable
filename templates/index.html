@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Timetable Generator</title>
+</head>
+<body>
+    <h1>Timetable Generator</h1>
+    
+    <form method="POST">
+        <input type="text" name="teacher" placeholder="Teacher Name" required>
+        <input type="text" name="subject" placeholder="Subject" required>
+        <button type="submit">Add</button>
+    </form>
+
+    <h2>Teachers Added</h2>
+    <ul>
+        {% for teacher, subject in teachers_subjects %}
+            <li>{{ teacher }} - {{ subject }}</li>
+        {% endfor %}
+    </ul>
+
+    <a href="/generate"><button>Generate Timetable (PDF)</button></a>
+</body>
+</html>
