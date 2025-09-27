@@ -32,23 +32,23 @@
     </form>
 
     <h2>Teachers Added</h2>
-    <ul>
-    {% for teacher, subject in teachers_subjects %}
-        <li class="teacher-item">
-            <span class="teacher-info">{{ teacher }} - {{ subject }}</span>
-            <span class="action-buttons">
-                <button type="button" class="edit-btn"
-                    onclick="editTeacher({{ loop.index0 }}, '{{ teacher }}', '{{ subject }}')">
-                    ✎
-                </button>
-                <button type="button" class="delete-btn"
-                    onclick="confirmDelete({{ loop.index0 }})">
-                    🗑
-                </button>
-            </span>
-        </li>
-    {% endfor %}
-</ul>
+   <ul>
+        {% for teacher, subject in teachers_subjects %}
+            <li>
+                {{ teacher }} - {{ subject }}
+                <span style="float:right;">
+                    <button type="button" style="background:#3b82f6; margin-right: 5px;"
+                        onclick="editTeacher({{ loop.index0 }}, '{{ teacher }}', '{{ subject }}')">
+                        ✎
+                    </button>
+                    <button type="button" style="background:#ef4444;"
+                        onclick="confirmDelete({{ loop.index0 }})">
+                        🗑
+                    </button>
+                </span>
+            </li>
+        {% endfor %}
+    </ul>
 
     {% if teachers_subjects %}
         <form action="/generate">
