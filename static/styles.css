@@ -84,6 +84,7 @@ ul {
     max-width: 400px;
 }
 
+/* List of teachers */
 ul li {
     background: #ffffff;
     padding: 12px 15px;
@@ -91,20 +92,32 @@ ul li {
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     font-size: 1rem;
+
+    /* Flexbox for alignment */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
-/* Optional styling for small buttons */
+
+/* Container for buttons inside list items */
+ul li .actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* Styling for small buttons */
 ul li button {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     padding: 6px 10px;
     border-radius: 6px;
     border: none;
     color: white;
     cursor: pointer;
-    padding-bottom: 10px;
+    transition: transform 0.2s;
 }
 
 ul li button:hover {
-    opacity: 0.85;
+    transform: scale(1.05);
 }
 
 /* PDF Button link */
@@ -129,6 +142,7 @@ a button {
         padding: 15px;
     }
 }
+
 
 
 
