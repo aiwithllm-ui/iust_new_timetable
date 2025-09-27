@@ -100,7 +100,7 @@ ul li button {
     border: none;
     color: white;
     cursor: pointer;
-    padding-bottom: 6px;
+    padding-bottom: 10px;
 }
 
 ul li button:hover {
@@ -129,5 +129,6 @@ a button {
         padding: 15px;
     }
 }
+
 
 
